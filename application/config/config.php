@@ -358,5 +358,10 @@ $config['rewrite_short_tags'] = FALSE;
 $config['proxy_ips'] = '';
 
 
+//Custom values
+
+$config['allowed_apps'] = array(
+	'fc998d105f8724b12423c6ff9e87ca1b'
+);
 /* End of file config.php */
 /* Location: ./application/config/config.php */
