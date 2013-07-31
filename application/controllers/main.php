@@ -15,23 +15,39 @@ class Main extends CI_Controller {
 		
 	    $config['upload_path'] = 'uploads/';
 	    $config['allowed_types'] = 'gif|jpg|png';
-	    $config['max_size']  = 1024;
+	    //$config['max_size']  = 1024;
 	    $config['encrypt_name'] = TRUE;
 	     	 
 	    $this->load->library('upload', $config);
 	    if (!$this->upload->do_upload('file_contents')){
 	    	$msg = $this->upload->display_errors('', '');
 	        die(json_encode(array('status' => 'error', 'msg' => $msg)));
-	    }    
+	    }
+	     
 		$data = $this->upload->data();
 		
 		if($hash = $this->input->post('hash')){
 			$file_info = unserialize(base64_decode(urldecode($hash)));
 			@unlink('uploads/'.$file_info['name']);
+			$thumb = str_replace('.', '_thumb.', $file_info['name']);
+			@unlink('uploads/'.$thumb);
 		}
 		
 		$result = array('name'=>$data['file_name'], 'content-type' => $data['file_type']);
+
+		//Create the thumb
+		$config['image_library'] = 'gd2';
+		$config['maintain_ratio'] = TRUE;
+		$config['width'] = 75;
+		$config['height'] = 75;	    
+		$config['create_thumb'] = TRUE; 
+		$config['source_image'] = $data['full_path'];
 		
+		$this->load->library('image_lib', $config); 		
+		if(!$this->image_lib->resize()){
+			die(json_encode(array('status' => 'error', 'msg' => $this->image_lib->display_errors())));
+		}
+				
 		if($custom_data = $this->input->post('custom_data')){
 			$result['custom_data'] = $custom_data;
 		}
@@ -62,20 +78,23 @@ class Main extends CI_Controller {
 		die();
 	}
 	
-	public function thumbs($hash){
+	public function thumbnail($hash){
 		$file_info = @unserialize(base64_decode(urldecode($hash)));
 		
 		if(!$file_info){
-			$this->not_found();
+			header('Content-Type: '.$file_info['content-type']);
+			readfile('uploads/not_found.png');
 			die();
 		}
 		
-	//	$file_path = 'uploads/'.$file_info['name'];
-		$file_path = 'uploads/thumbs/'.$file_info['name'];
+		$thumb = str_replace('.', '_thumb.', $file_info['name']);
 		
+		$file_path = 'uploads/'.$thumb;
+
 		if(!is_readable($file_path)){
-			$this->not_found();
-			die();			
+			header('Content-Type: '.$file_info['content-type']);
+			readfile('uploads/not_found.png');
+			die();
 		}
 		
 		header('Content-Type: '.$file_info['content-type']);
@@ -85,13 +104,13 @@ class Main extends CI_Controller {
 	
 	
 	
-	private function not_found(){
+	private function not_found($w=400, $h=400){
 		?>
 <svg 
      version="1.1" 
      xmlns="http://www.w3.org/2000/svg" 
      xmlns:xlink="http://www.w3.org/1999/xlink" 
-     width="400px" height="400px" 
+     width="<?=$w?>px" height="<?=$h?>px" 
      viewBox="0 0 400 400" preserveAspectRatio="none"> 
    <g> 
 <image width="400" height="400" xlink:href="data:image/png;base64, 
