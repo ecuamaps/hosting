@@ -41,6 +41,7 @@ class Main extends CI_Controller {
 	}
 	
 	public function show($hash){
+
 		$file_info = @unserialize(base64_decode(urldecode($hash)));
 		
 		if(!$file_info){
