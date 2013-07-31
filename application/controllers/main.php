@@ -50,6 +50,7 @@ class Main extends CI_Controller {
 		
 		$file_path = 'uploads/'.$file_info['name'];
 		
+		
 		if(!is_readable($file_path)){
 			$this->not_found();
 			die();			
@@ -59,6 +60,29 @@ class Main extends CI_Controller {
 		readfile($file_path);
 		die();
 	}
+	
+	public function thumbs($hash){
+		$file_info = @unserialize(base64_decode(urldecode($hash)));
+		
+		if(!$file_info){
+			$this->not_found();
+			die();
+		}
+		
+	//	$file_path = 'uploads/'.$file_info['name'];
+		$file_path = 'uploads/thumbs/'.$file_info['name'];
+		
+		if(!is_readable($file_path)){
+			$this->not_found();
+			die();			
+		}
+		
+		header('Content-Type: '.$file_info['content-type']);
+		readfile($file_path);
+		die();
+	}
+	
+	
 	
 	private function not_found(){
 		?>
